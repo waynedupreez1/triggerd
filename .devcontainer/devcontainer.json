@@ -1,0 +1,11 @@
+{
+    "build": { "dockerfile": "Dockerfile" },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "golang.go",
+                "github.vscode-github-actions"
+            ]
+        }
+    }
+}

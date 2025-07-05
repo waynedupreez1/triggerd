@@ -53,6 +53,32 @@ rules:
 ```
 ---
 
+# Requirements
+You need libpcap installed on your box, if you intend to use the pcap trigger.
+
+---
+
+# Development
+
+A provided devcontainer is used that does contain all dependancies to build, run and test.
+
+## Tasks
+
+To use the tasks as described here we use [xc](https://xcfile.dev/)
+
+### Test
+Runs All Tests
+```
+go test ./...
+```
+
+### Build
+Build Application add to output folder
+```
+mkdir -p output
+go build -o output/dubvirt ./cmd/dupvirt
+```
+
 ## Mascot Usage & Licensing
 
 The Triggerd mascot, “Trigger,” is an original character created to represent the spirit of the project—vigilant, responsive, and infrastructure-savvy.
