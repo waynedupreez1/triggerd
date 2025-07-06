@@ -62,6 +62,10 @@ You need libpcap installed on your box, if you intend to use the pcap trigger.
 
 A provided devcontainer is used that does contain all dependancies to build, run and test.
 
+## Style
+
+We aim to follow [Google Go Style Guide](https://google.github.io/styleguide/go/) for code development.
+
 ## Tasks
 
 To use the tasks as described here we use [xc](https://xcfile.dev/)
