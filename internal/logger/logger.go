@@ -24,8 +24,8 @@ const (
 	Error
 )
 
-// ILogger defines the logging interface used throughout the application.
-type ILogger interface {
+// Log defines the logging interface used throughout the application.
+type Log interface {
 	Debug(msg string, keysAndValues ...any)
 	Info(msg string, keysAndValues ...any)
 	Warn(msg string, keysAndValues ...any)
@@ -37,7 +37,7 @@ type slogLogger struct {
 }
 
 // New creates a new ILogger with the specified log level.
-func New(logLevel LogLevel) ILogger {
+func New(logLevel LogLevel) Log {
 
 	level := new(slog.LevelVar)
 

@@ -21,20 +21,21 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
-// PcapTriggerConfig defines the YAML-parsed config for the PCAP trigger.
-type PcapTriggerConfig struct {
-	Interface     string        `yaml:"interface"`      // Pcap interface name, e.g. "eth0"
-	Filter        string        `yaml:"filter"`         // Pcap filter expression, e.g."tcp port 80"
-	Duration      time.Duration `yaml:"duration"`       // A rolling window duration, e.g. "5s"
+
+// PacketSourceTriggerConfig defines the YAML-parsed config for the PCAP trigger.
+type PacketSourceTriggerConfig struct {
+	Interface        string        `yaml:"interface"`      // Pcap interface name, e.g. "eth0"
+	Filter           string        `yaml:"filter"`         // Pcap filter expression, e.g."tcp port 80"
+	WinDuration   time.Duration `yaml:"duration"`       // A rolling window duration, e.g. "5s"
 	CheckInterval time.Duration `yaml:"check_interval"` // How often to check traffic, e.g. "10s"
 }
 
-// PcapTrigger implements the Trigger interface.
-type PcapTrigger struct {
-	iface         string
-	filter        string
-	trafficAbove  int
-	duration      time.Duration
+// PacketSourceTrigger implements the Trigger interface.
+type PacketSourceTrigger struct {
+	getPacketStream  GetPacketStream
+	iface            string
+	filter           string
+	winDuration   time.Duration
 	checkInterval time.Duration
 }
 
@@ -54,16 +55,16 @@ type PcapTrigger struct {
 // 	}, nil
 // }
 
-// Start begins packet capture and emits TriggerEvents when thresholds are exceeded.
-func (t *PcapTrigger) Start(ctx context.Context, out chan<- TriggerEvent) error {
-	handle, err := pcap.OpenLive(t.iface, 1600, true, pcap.BlockForever)
+// Start begins packet capture and emits TriggerEvents every CheckInterval.
+func (p *PacketSourceTrigger) Start(ctx context.Context, out chan<- TriggerEvent) error {
+	handle, err := pcap.OpenLive(p.iface, 1600, true, pcap.BlockForever)
 	if err != nil {
 		return fmt.Errorf("pcap open failed: %w", err)
 	}
 	defer handle.Close()
 
-	if t.filter != "" {
-		if err := handle.SetBPFFilter(t.filter); err != nil {
+	if p.filter != "" {
+		if err := handle.SetBPFFilter(p.filter); err != nil {
 			return fmt.Errorf("failed to set BPF filter: %w", err)
 		}
 	}
@@ -71,7 +72,7 @@ func (t *PcapTrigger) Start(ctx context.Context, out chan<- TriggerEvent) error 
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	packetChan := packetSource.Packets()
 
-	ticker := time.NewTicker(t.checkInterval)
+	ticker := time.NewTicker(p.checkInterval)
 	defer ticker.Stop()
 
 	var packetCount int
@@ -84,18 +85,16 @@ func (t *PcapTrigger) Start(ctx context.Context, out chan<- TriggerEvent) error 
 
 		case <-ticker.C:
 			elapsed := time.Since(windowStart)
-			if elapsed >= t.duration {
-				if packetCount >= t.trafficAbove {
-					out <- TriggerEvent{
-						Name:      "pcap",
-						Source:    t.iface,
-						Timestamp: time.Now(),
-						Payload: map[string]interface{}{
-							"packet_count": packetCount,
-							"filter":       t.filter,
-							"duration":     t.duration.Seconds(),
-						},
-					}
+			if elapsed >= p.winDuration {
+				out <- TriggerEvent{
+					Name:      "pcap",
+					Source:    p.iface,
+					Timestamp: time.Now(),
+					Payload: map[string]interface{}{
+						"packet_count": packetCount,
+						"filter":       p.filter,
+						"duration":     p.winDuration.Seconds(),
+					},
 				}
 				packetCount = 0
 				windowStart = time.Now()
