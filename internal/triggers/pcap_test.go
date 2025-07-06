@@ -17,11 +17,19 @@ func TestPcapTrigger_EmitsEvent(t *testing.T) {
 	}
 	defer packetStream.Close()
 
-	packetStream.SetBPFFilter("port 8080")
+	streamerr := packetStream.SetBPFFilter("tcp")
+	if streamerr != nil {
+		t.Fatalf("failed to set BPF filter: %v", streamerr)
+	}
+		
 
 	packets := packetStream.Packets()
 	for pkt := range packets {
-		fmt.Print("Captured packet:", pkt)
+		fmt.Print("Captured packet timestamp:", pkt.Metadata().Timestamp, "\n")
+		fmt.Print("Captured packet capture info:", pkt.Metadata().CaptureInfo, "\n")
+		fmt.Print("Captured packet length:", pkt.Metadata().Length, "\n")
+		fmt.Print("Captured packet data size:", len(pkt.Data()), "\n")
+
 	}
 }
 
