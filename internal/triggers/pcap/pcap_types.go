@@ -11,9 +11,9 @@ import (
 	"github.com/google/gopacket"
 )
 
-// StreamInitializer is an interface we use to abstract the packet source.
-type StreamInitializer interface {
-	Open() (PacketStream, error)
+// Stream is an interface we use to abstract the packet source initializer.
+type Stream interface {
+	Open(iface string) (PacketStream, error)
 }
 
 // PacketStream is an interface that abstracts the packet source.

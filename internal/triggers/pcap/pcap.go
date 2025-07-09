@@ -28,32 +28,32 @@ type PacketSourceTriggerConfig struct {
 	CheckInterval time.Duration `yaml:"check_interval"` // How often to check traffic, e.g. "10s"
 }
 
-// PacketSourceTrigger implements the Trigger interface.
-type Trigger struct {
-	stream          StreamInitializer
+// PcapTrigger implements the Trigger interface.
+type PcapTrigger struct {
+	stream      Stream
 	log             logger.Log
+	iface string
+	filter string
 	winDuration     time.Duration
 	checkInterval   time.Duration
 }
 
-// Create a new PcapTrigger with the given configuration.
-func NewPcapTrigger(log logger.Log, iface string, winDuration time.Duration,
-					checkInterval time.Duration) (*Trigger, error) {
-	
-	streamInitializer := &PcapStreamInitializer {
+func NewPcapTrigger(log logger.Log,  stream Stream, iface string, filter string,
+					winDuration time.Duration, checkInterval time.Duration) (*PcapTrigger, error) {
+
+	return &PcapTrigger {
+		stream: 		stream,
 		log: log,
 		iface: iface,
-	}
-	return &Trigger {
-		stream: 		streamInitializer,  
+		filter: filter,
 		winDuration:      winDuration,
 		checkInterval: checkInterval,
 	}, nil
 }
 
 // Start begins packet capture and emits TriggerEvents every CheckInterval.
-func (p *Trigger) Start(ctx context.Context, out chan<- triggers.TriggerEvent) error {
-	packetStream, err := p.stream.Open(p.stream.iface)
+func (p *PcapTrigger) Start(ctx context.Context, out chan<- triggers.TriggerEvent) error {
+	packetStream, err := p.stream.Open(p.iface)
 	if err != nil {
 		e := fmt.Errorf("failed to open pcap on interface %s: %w", p.iface, err)
 		p.log.Error(e.Error())

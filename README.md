@@ -70,10 +70,20 @@ We aim to follow [Google Go Style Guide](https://google.github.io/styleguide/go/
 
 To use the tasks as described here we use [xc](https://xcfile.dev/)
 
-### Test
+### test all
 Runs All Tests
 ```
 go test ./...
+```
+
+### test
+Runs A Specific Test 
+
+ie. internal/triggers/pcap
+
+Inputs: TEST_FILE_PATH
+```
+go test -v ./$TEST_FILE_PATH
 ```
 
 ### Build

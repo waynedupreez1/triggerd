@@ -11,11 +11,12 @@ import (
 func TestRealPcapStream(t *testing.T) {
 	// Setup
 	mockLogger := testutils.NewMockLogger()
-	realPcap := &PcapStreamInitializer {
-		log: mockLogger,
-	}
 	
-	var packetStream, err = realPcap.Open("tap0")
+	RealPcapStream := NewRealPcapStream(mockLogger)
+	
+	pcapTrigger, err := NewPcapTrigger(mockLogger, RealPcapStream, "eth0", "", 5, 5)
+	
+	packetStream, err := pcapTrigger.stream.Open("eth0")
 	if err != nil {
 		t.Fatalf("failed to open pcap: %v", err)
 	}
@@ -27,6 +28,8 @@ func TestRealPcapStream(t *testing.T) {
 		fmt.Print("Captured packet data size:", pkt.Metadata().CaptureLength, "\n")
 	}
 }
+
+
 
 // func TestPcapTrigger_EmitsEvent(t *testing.T) {
 // 	mockPackets := make(chan gopacket.Packet, 100)
