@@ -1,7 +1,7 @@
 /*
-	Package triggers
+Package triggers
 
-# Creates a trigger interface used by the rules engine
+Creates a trigger interface used by the rules engine
 
 Author: Wayne du Preez
 */
@@ -27,12 +27,3 @@ type TriggerEvent struct {
 	Payload   map[string]interface{} // Arbitrary data emitted by the trigger
 	Meta      map[string]string      // Optional metadata (e.g. rule ID, trigger ID)
 }
-
-// ConfigurableTrigger is an optional interface for triggers that support dynamic configuration.
-type ConfigurableTrigger interface {
-	Trigger
-	Configure(cfg map[string]interface{}) error
-}
-
-// Factory is a function that creates a new trigger instance from a config map.
-type Factory func(cfg map[string]any) (Trigger, error)
