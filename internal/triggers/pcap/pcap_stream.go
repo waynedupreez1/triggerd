@@ -1,11 +1,7 @@
 /*
 Package pcap
 
-This provides the pcap trigger which does the following:
-1. Captures network traffic on a specified interface
-2. Applies a BPF filter
-3. Counts packets over a specified duration
-4. Emits a TriggerEvent if the packet count exceeds a threshold
+Here we create the real pcap stream initializers which return the real pcap packet source
 
 Author: Wayne du Preez
 */
@@ -24,8 +20,8 @@ type RealPcapStream struct {
 	Log logger.Log
 }
 
-// Open just set snaplen to 1600, promisc to true, and timeout to BlockForever this
-// is the default for most packet capture scenarios.
+// Open sets defaults for snaplen to 1600, promisc to true, and timeout to BlockForever this
+// seems good for most packet capture scenarios.
 func (r RealPcapStream) Open(iface string) (PacketStream, error) {
 
 	interfs, err := pcap.FindAllDevs()
@@ -58,12 +54,11 @@ func (r RealPcapStream) Open(iface string) (PacketStream, error) {
 	return NewRealPcapPacketStreamFromHandle(handle, r.Log), nil
 }
 
-func NewRealPcapStream(log logger.Log) RealPcapStream {
-	return RealPcapStream{
+func NewRealPcapStream(log logger.Log) *RealPcapStream {
+	return &RealPcapStream{
 		Log: log,
 	}
 }
-
 
 // RealPcapPacketStream is an implementation of PacketStream that
 // uses pcap to read packets from a live interface.
@@ -75,7 +70,7 @@ type RealPcapPacketStream struct {
 
 func NewRealPcapPacketStreamFromHandle(handle *pcap.Handle, log logger.Log) *RealPcapPacketStream {
 	return &RealPcapPacketStream{
-		log: log,
+		log:          log,
 		handle:       handle,
 		packetSource: gopacket.NewPacketSource(handle, handle.LinkType()),
 	}

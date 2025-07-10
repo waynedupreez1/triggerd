@@ -1,7 +1,7 @@
 /*
 Package triggers
 
-Creates a trigger interface used by the rules engine
+# Creates a trigger interface used by the rules engine
 
 Author: Wayne du Preez
 */
@@ -21,9 +21,9 @@ type Trigger interface {
 // TriggerEvent represents a signal emitted by a trigger.
 // It contains metadata and a flexible payload for rule evaluation.
 type TriggerEvent struct {
-	Name      string                 // Trigger type (e.g. "timer", "pcap", "metrics")
-	Source    string                 // Optional: instance ID or source (e.g. "eth0", "cpu")
-	Timestamp time.Time              // When the event occurred
-	Payload   map[string]interface{} // Arbitrary data emitted by the trigger
-	Meta      map[string]string      // Optional metadata (e.g. rule ID, trigger ID)
+	Name      string            // Trigger name used to workout which rule it associates with
+	Type      string            // Trigger type (e.g. "timer", "pcap", "metrics")
+	Timestamp time.Time         // When the event occurred
+	Payload   map[string]any    // Arbitrary data emitted by the trigger
+	Meta      map[string]string // Optional metadata (e.g. rule ID, trigger ID)
 }

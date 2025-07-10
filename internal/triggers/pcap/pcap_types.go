@@ -1,7 +1,7 @@
 /*
 Package pcap
 
-This provides some interfaces to allow for injecting test implementations
+# This provides some interfaces to allow for injecting test implementations
 
 Author: Wayne du Preez
 */

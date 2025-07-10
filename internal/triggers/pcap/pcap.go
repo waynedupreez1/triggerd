@@ -3,9 +3,10 @@ Package pcap
 
 This provides the pcap trigger which does the following:
 1. Captures network traffic on a specified interface
-2. Applies a BPF filter
-3. Counts packets over a specified duration
-4. Emits a TriggerEvent if the packet count exceeds a threshold
+2. Applies a BPF filter if any
+3. Counts packets over specified time window
+4. Counts data size over specified time window
+4. Emits a TriggerEvent at specified interval
 
 Author: Wayne du Preez
 */
@@ -30,23 +31,26 @@ type PacketSourceTriggerConfig struct {
 
 // PcapTrigger implements the Trigger interface.
 type PcapTrigger struct {
-	stream      Stream
-	log             logger.Log
-	iface string
-	filter string
-	winDuration     time.Duration
-	checkInterval   time.Duration
+	stream        Stream
+	log           logger.Log
+	triggerName   string
+	iface         string
+	filter        string
+	winDuration   time.Duration
+	checkInterval time.Duration
 }
 
-func NewPcapTrigger(log logger.Log,  stream Stream, iface string, filter string,
-					winDuration time.Duration, checkInterval time.Duration) (*PcapTrigger, error) {
+func NewPcapTrigger(log logger.Log, stream Stream, iface string, filter string,
+					winDuration time.Duration, checkInterval time.Duration, 
+					triggerName string) (triggers.Trigger, error) {
 
-	return &PcapTrigger {
-		stream: 		stream,
-		log: log,
-		iface: iface,
-		filter: filter,
-		winDuration:      winDuration,
+	return &PcapTrigger{
+		stream:        stream,
+		log:           log,
+		triggerName:   triggerName,
+		iface:         iface,
+		filter:        filter,
+		winDuration:   winDuration,
 		checkInterval: checkInterval,
 	}, nil
 }
@@ -62,12 +66,10 @@ func (p *PcapTrigger) Start(ctx context.Context, out chan<- triggers.TriggerEven
 	defer packetStream.Close()
 
 	if p.filter != "" {
-		if err := packetStream.SetFilter(p.filter); 
-			err != nil {
-				e := fmt.Errorf("failed to set filter %s on interface %s: %w", p.filter, p.iface,
-								err)
-				p.log.Error(e.Error())
-				return e
+		if err := packetStream.SetFilter(p.filter); err != nil {
+			e := fmt.Errorf("failed to set filter %s on interface %s: %w", p.filter, p.iface, err)
+			p.log.Error(e.Error())
+			return e
 		}
 	}
 
@@ -75,6 +77,7 @@ func (p *PcapTrigger) Start(ctx context.Context, out chan<- triggers.TriggerEven
 	defer ticker.Stop()
 
 	var packetCount int
+	var packetSizeBytes int
 	windowStart := time.Now()
 
 	for {
@@ -82,28 +85,35 @@ func (p *PcapTrigger) Start(ctx context.Context, out chan<- triggers.TriggerEven
 		case <-ctx.Done():
 			return nil
 
+		// Every checkInterval this case runs
 		case <-ticker.C:
 			elapsed := time.Since(windowStart)
+			// Have the window duration expired? Send a trigger with the payload
 			if elapsed >= p.winDuration {
 				out <- triggers.TriggerEvent{
-					Name:      "pcap",
-					Source:    p.iface,
+					Name:      p.triggerName,
+					Type: "pcap",
 					Timestamp: time.Now(),
-					Payload: map[string]interface{}{
-						"packet_count": packetCount,
-						"filter":       p.filter,
-						"duration":     p.winDuration.Seconds(),
+					Payload: map[string]any{
+						"packetSizeBytes": packetSizeBytes,
+						"packetCount":     packetCount,
+						"filter":          p.filter,
+						"duration":        p.winDuration.Seconds(),
 					},
 				}
 				packetCount = 0
+				packetSizeBytes = 0
 				windowStart = time.Now()
 			}
 
-		case _, ok := <-packetStream.Packets():
+		case pkt, ok := <-packetStream.Packets():
 			if !ok {
-				return fmt.Errorf("packet channel closed")
+				e := fmt.Errorf("packet channel closed")
+				p.log.Info(e.Error())
+				return e
 			}
 			packetCount++
+			packetSizeBytes = +pkt.Metadata().CaptureLength
 		}
 	}
 }

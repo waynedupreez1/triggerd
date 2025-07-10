@@ -12,7 +12,7 @@ import (
 )
 
 // MockLogger is a mock implementation of the logger.Log interface for testing.
-type MockLogger struct {}
+type MockLogger struct{}
 
 // NewMockLogger creates a new instance of MockLogger.
 func NewMockLogger() *MockLogger {
@@ -37,4 +37,4 @@ func (m *MockLogger) Warn(msg string, keysAndValues ...any) {
 // Error implements the logger.Log interface for error messages.
 func (m *MockLogger) Error(msg string, keysAndValues ...any) {
 	fmt.Printf("ERROR: %s\n", msg)
-}	
+}

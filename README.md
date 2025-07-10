@@ -77,20 +77,23 @@ go test ./...
 ```
 
 ### test
-Runs A Specific Test 
-
-ie. internal/triggers/pcap
-
+Runs A Specific Test ie. internal/triggers/pcap
 Inputs: TEST_FILE_PATH
 ```
 go test -v ./$TEST_FILE_PATH
 ```
 
-### Build
-Build Application add to output folder
+### build
+Build Application and add to output folder
 ```
 mkdir -p output
-go build -o output/dubvirt ./cmd/dupvirt
+go build -o output/triggerd ./cmd/triggerd
+```
+
+### format
+Format Code
+```
+go fmt ./...
 ```
 
 ## Mascot Usage & Licensing
